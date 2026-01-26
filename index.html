@@ -5,6 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mini Golf Valentine ⛳️</title>
   <style>
+    .musicBtn{
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform .08s ease, background .2s ease, border-color .2s ease;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.musicBtn:hover{
+  transform: translateY(-1px);
+  border-color: rgba(255, 105, 180, .55);
+  background: rgba(255, 105, 180, .10);
+}
     :root{
       --bg: #0b2a17;
       --card: #0f3a21;
@@ -565,6 +583,9 @@
   </style>
 </head>
 <body>
+  <audio id="bgMusic" loop preload="auto">
+  <source src="music.mp3" type="audio/mpeg" />
+</audio>
   <!-- Floating hearts background -->
   <div class="hearts" aria-hidden="true">
     <span class="heart" style="--x: 8%; --size: 18px; --opacity:.35; --dur: 12s; --drift: 12px; --rot: -12deg;"></span>
@@ -581,6 +602,11 @@
   <div class="wrap">
     <div class="top">
       <div class="badge">⛳ Mini Golf Scorecard</div>
+
+        <button class="musicBtn" id="musicBtn" onclick="toggleMusic()">
+    Play music 🎶
+  </button>
+
       <div class="badge">❤️ Valentine’s Edition</div>
     </div>
 
@@ -708,6 +734,29 @@
     const shootBtn = document.getElementById("shootBtn");
     const miniMsgText = document.getElementById("miniMsgText");
     const miniStatus = document.getElementById("miniStatus");
+    const bgMusic = document.getElementById("bgMusic");
+const musicBtn = document.getElementById("musicBtn");
+let musicOn = false;
+
+function toggleMusic(){
+  if(!bgMusic) return;
+
+  if(!musicOn){
+    bgMusic.volume = 0.25; // you can change this
+    bgMusic.play().then(() => {
+      musicOn = true;
+      if(musicBtn) musicBtn.textContent = "Pause music 🔇";
+    }).catch(() => {
+      // iPhone sometimes needs a second tap
+      alert("Tap again to play 🎶");
+    });
+  } else {
+    bgMusic.pause();
+    musicOn = false;
+    if(musicBtn) musicBtn.textContent = "Play music 🎶";
+  }
+}
+
 
     let isShooting = false;
 
