@@ -579,7 +579,6 @@
     }
       .shooting .ball, .shooting .ballShadow{ animation: none; }
       .flag::after{ animation: none; }
-    }
   </style>
 </head>
 <body>
@@ -637,12 +636,13 @@
       <div class="badge">❤️ Valentine’s Edition</div>
     </div>
 
-    <h1 class="title">Abby’s Scorecard</h1>
+    <h1 class="title"><span id="personName">Abby</span>’s Scorecard</h1>
+
 
     <div class="card">
       <div class="scoreHeader">
         <div>
-          <h2>Abby vs Ugo</h2>
+          <h2><span id="personName2">Abby</span> vs Ugo</h2>
           <div class="names">Course: “A Night To Remember 💚”</div>
         </div>
         <div class="pill">Final hole: Feb 14 😉</div>
@@ -724,12 +724,11 @@
 
       <div class="ask">
         <p>Okay… serious question</p>
-        <h3>❤️ Abby, Will you be my Valentine? ❤️</h3>
-
+        <h3>❤️<span id="personName3">Abby</span>, Will you be my Valentine?❤️</h3>
         <div class="btns">
           <button class="yes" onclick="celebrateYes()">Yes 😌</button>
           <button onclick="celebrateYes()">Of course! 🥹</button>
-          <button onclick="reactAww()">Hmmm Let me think… 🤔</button>
+          <button onclick="reactAww()">Hmmm Let me think… </button>
           <button class="no" id="noBtn">No 😅</button>
         </div>
       </div>
@@ -767,6 +766,22 @@ const sfxYay = document.getElementById("sfxYay");
 const sfxAww = document.getElementById("sfxAww");
 const confettiFull = document.getElementById("confettiFull");
 const ctxFull = confettiFull.getContext("2d");
+// --- Dynamic name from URL ---
+const params = new URLSearchParams(window.location.search);
+const nameFromUrl = params.get("name");
+
+if (nameFromUrl) {
+  const safeName = nameFromUrl.trim();
+
+  const n1 = document.getElementById("personName");
+  const n2 = document.getElementById("personName2");
+  const n3 = document.getElementById("personName3");
+
+  if (n1) n1.textContent = safeName;
+  if (n2) n2.textContent = safeName;
+  if (n3) n3.textContent = safeName;
+}
+
 let musicOn = false;
 function playSfx(audioEl, volume = 0.8){
   if(!audioEl) return;
@@ -986,7 +1001,7 @@ function toggleMusic(){
     }
 
     function showTease(){
-      modalTitle.textContent = "Careful…";
+      modalTitle.textContent = "Bet bet...";
       modalText.innerHTML =
         "Take your time<br/>" +
         "But I’m still keeping the mini golf date on the schedule.";
@@ -1037,5 +1052,3 @@ function toggleMusic(){
   </script>
 </body>
 </html>
-
-
