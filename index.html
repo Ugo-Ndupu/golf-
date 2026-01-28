@@ -446,13 +446,7 @@
       opacity: .55;
     }
 
-    .shooting .ball{
-      animation: rollIn 1.15s cubic-bezier(.22,.9,.25,1) forwards;
-    }
 
-    .shooting .ballShadow{
-      animation: shadowMove 1.15s cubic-bezier(.22,.9,.25,1) forwards;
-    }
 
     @keyframes rollIn{
       0%{ left: 18px; transform: translateY(-50%) scale(1); }
@@ -482,6 +476,31 @@
       65%{ opacity: 0; }
       100%{ opacity: 1; transform: scale(1); }
     }
+
+    /* Variable-driven ball travel */
+.shooting .ball{
+  animation: rollDynamic var(--rollTime) cubic-bezier(.22,.9,.25,1) forwards;
+}
+
+.shooting .ballShadow{
+  animation: shadowDynamic var(--rollTime) cubic-bezier(.22,.9,.25,1) forwards;
+}
+@keyframes rollDynamic{
+  0%{
+    left: 18px;
+    transform: translateY(-50%) scale(1);
+  }
+  100%{
+    left: var(--endPos);
+    transform: translateY(-50%) scale(var(--endScale));
+    opacity: var(--endOpacity);
+  }
+}
+
+@keyframes shadowDynamic{
+  0%{ left: 18px; opacity: .55; }
+  100%{ left: var(--endPos); opacity: 0; }
+}
 
     .sparkle{
       position:absolute;
@@ -577,8 +596,39 @@
       .miniTop{ flex-direction: column; align-items: stretch; }
       .tinyBtn{ width: 100%; }
     }
-      .shooting .ball, .shooting .ballShadow{ animation: none; }
-      .flag::after{ animation: none; }
+      
+      /* Power meter */
+.powerWrap{
+  display:flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.powerLabel{
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.powerMeter{
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.12);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.18);
+}
+
+.powerFill{
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(
+    90deg,
+    #7cffb2,
+    #ffd6e7,
+    #ff4d6d
+  );
+  transition: width .08s linear;
+}
   </style>
 </head>
 <body>
@@ -698,6 +748,13 @@
             <div class="name">Hole-in-one attempt</div>
           </div>
           <button class="tinyBtn" id="shootBtn" onclick="shootBall()">Take the shot ⛳️</button>
+          <div class="powerWrap">
+  <div class="powerLabel">Power</div>
+  <div class="powerMeter">
+    <div class="powerFill" id="powerFill"></div>
+  </div>
+</div>
+
         </div>
 
         <div class="fairway" id="fairway">
@@ -753,7 +810,6 @@
     const modal = document.getElementById("modal");
     const modalTitle = document.getElementById("modalTitle");
     const modalText = document.getElementById("modalText");
-
     const fairway = document.getElementById("fairway");
     const confettiCanvas = document.getElementById("confetti");
     const ctx = confettiCanvas.getContext("2d");
@@ -1015,44 +1071,120 @@ function toggleMusic(){
     modal.addEventListener("click", (e) => {
       if(e.target === modal) closeModal();
     });
+let power = 0;
+let powerDir = 1;
+let powerInterval = null;
+
+const powerFill = document.getElementById("powerFill");
+
+function startPower(){
+  power = 0;
+  powerDir = 1;
+  powerInterval = setInterval(() => {
+    power += powerDir * 2;
+
+    if(power >= 100){
+      power = 100;
+      powerDir = -1;
+    }
+    if(power <= 0){
+      power = 0;
+      powerDir = 1;
+    }
+
+    powerFill.style.width = power + "%";
+  }, 30);
+}
+
+function stopPower(){
+  clearInterval(powerInterval);
+}
+function getShotOutcome(power){
+  // Sweet spot
+  if(power >= 42 && power <= 58){
+    return "perfect";
+  }
+
+  // Near miss
+  if((power >= 35 && power < 42) || (power > 58 && power <= 65)){
+    return "lip";
+  }
+
+  return "miss";
+}
 
     function shootBall(){
-      if(isShooting) return;
-      isShooting = true;
+  if(isShooting) return;
+  isShooting = true;
 
-      miniStatus.textContent = "SHOT";
-      miniMsgText.textContent = "Okay… that one is going IN 😭";
-      shootBtn.disabled = true;
-      shootBtn.style.opacity = "0.65";
-      shootBtn.style.cursor = "not-allowed";
+  stopPower();
 
-      fairway.classList.remove("shooting");
-      void fairway.offsetWidth; // restart animation
-      fairway.classList.add("shooting");
+  const outcome = getShotOutcome(power);
 
-      // When the animation ends, show the result
-      setTimeout(() => {
-        miniStatus.textContent = "HOLE-IN-ONE";
-        burstConfetti();
-        miniMsgText.textContent = "Yup… hole-in-one 😌 now say yes.";
-        showWin();
+  let endPos = "calc(100% - 28px)";
+  let endScale = 0.6;
+  let endOpacity = 0;
+  let rollTime = 0.9;
 
-        // reset for replay (optional)
-        setTimeout(() => {
-          fairway.classList.remove("shooting");
-          shootBtn.disabled = false;
-          shootBtn.style.opacity = "1";
-          shootBtn.style.cursor = "pointer";
-          miniStatus.textContent = "READY";
-          miniMsgText.textContent = "If it goes in… you have to say yes 😌";
-          isShooting = false;
-        }, 1200);
-      }, 1150);
+  if(outcome === "lip"){
+    endPos = "calc(100% - 44px)";
+    endScale = 0.85;
+    endOpacity = 1;
+    rollTime = 0.8;
+  }
+
+  if(outcome === "miss"){
+    endPos = "calc(100% - 80px)";
+    endScale = 1;
+    endOpacity = 1;
+    rollTime = 0.75;
+  }
+
+  fairway.style.setProperty("--endPos", endPos);
+  fairway.style.setProperty("--endScale", endScale);
+  fairway.style.setProperty("--endOpacity", endOpacity);
+  fairway.style.setProperty("--rollTime", rollTime + "s");
+
+  miniStatus.textContent = "SHOT";
+  shootBtn.disabled = true;
+  shootBtn.style.opacity = "0.65";
+
+  fairway.classList.remove("shooting");
+  void fairway.offsetWidth;
+  fairway.classList.add("shooting");
+
+  setTimeout(() => {
+
+    if(outcome === "perfect"){
+      miniStatus.textContent = "HOLE-IN-ONE";
+      miniMsgText.textContent = "Yup… hole-in-one 😌 now say yes.";
+      burstConfetti();
+      showWin();
     }
+
+    if(outcome === "lip"){
+      miniStatus.textContent = "SO CLOSE 😭";
+      miniMsgText.textContent = "It literally touched the edge… try again.";
+    }
+
+    if(outcome === "miss"){
+      miniStatus.textContent = "MISS 😅";
+      miniMsgText.textContent = "Okay that one was tragic… again.";
+    }
+
+    setTimeout(() => {
+      fairway.classList.remove("shooting");
+      shootBtn.disabled = false;
+      shootBtn.style.opacity = "1";
+      miniStatus.textContent = "READY";
+      startPower();
+      isShooting = false;
+    }, 1200);
+
+  }, rollTime * 1000);
+}
+    // Start power meter on load
+    startPower();
   </script>
 </body>
 </html>
-
-
-
-
