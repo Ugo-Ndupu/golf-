@@ -391,6 +391,58 @@
       box-shadow: inset 0 6px 10px rgba(0,0,0,.55);
     }
 
+    /* 💓 Hearts popping out of the hole */
+.holeHearts{
+  position: absolute;
+  right: 18px;        /* same as hole */
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.holeHearts span{
+  position: absolute;
+  font-size: 18px;
+  opacity: 0;
+  transform: translate(-50%, 10px) scale(0);
+}
+
+#fairway.perfect .holeHearts span{
+  animation: heartBurst 1.2s ease-out forwards;
+}
+
+#fairway.perfect .holeHearts span:nth-child(1){
+  animation-delay: 0s;
+}
+
+#fairway.perfect .holeHearts span:nth-child(2){
+  animation-delay: .08s;
+  left: -6px;
+}
+
+#fairway.perfect .holeHearts span:nth-child(3){
+  animation-delay: .16s;
+  left: 6px;
+}
+
+@keyframes heartBurst{
+  0%{
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0);
+  }
+  30%{
+    opacity: 1;
+    transform: translate(-50%, -6px) scale(1.25);
+  }
+  60%{
+    transform: translate(-50%, -18px) scale(1);
+  }
+  100%{
+    opacity: 0;
+    transform: translate(-50%, -34px) scale(.85);
+  }
+}
+
     .flag{
       position: absolute;
       right: 34px;
@@ -730,7 +782,7 @@
           <tr>
             <td>5</td>
             <td>Food after</td>
-            <td class="score">Required 😌</td>
+            <td class="score">Required</td>
           </tr>
         </tbody>
       </table>
@@ -762,6 +814,12 @@
           <div class="laneLine"></div>
           <div class="flag"></div>
           <div class="hole" aria-hidden="true"></div>
+          <div class="holeHearts" id="holeHearts">
+            <span>💗</span>
+            <span>💓</span>
+            <span>💖</span>
+          </div>
+          
 
           <div class="ballShadow" id="ballShadow"></div>
           <div class="ball" id="ball"></div>
@@ -1048,13 +1106,16 @@ function toggleMusic(){
       draw();
     }
 
-    function showWin(){
-      modalTitle.textContent = "LETS GOOO ⛳️❤️";
-      modalText.innerHTML =
-        "Okay cool… so it’s official 😌<br/>" +
-        "I’m taking you mini golfing and we’re getting food after.";
-      modal.style.display = "grid";
-    }
+   function showWin(content){
+  modalTitle.textContent = content?.title || "LETS GOOO ⛳️❤️";
+
+  modalText.innerHTML = content?.message
+    ? content.message.replace(/\n/g, "<br/>")
+    : "Okay cool… so it’s official 😌<br/>I’m taking you mini golfing and we’re getting food after.";
+
+  modal.style.display = "grid";
+}
+
 
     function showTease(){
       modalTitle.textContent = "Bet bet...";
@@ -1155,25 +1216,33 @@ function getShotOutcome(power){
 
   setTimeout(() => {
 
-    if(outcome === "perfect"){
-      miniStatus.textContent = "HOLE-IN-ONE";
-      miniMsgText.textContent = "Yup… hole-in-one 😌 now say yes.";
-      burstConfetti();
-      showWin();
-    }
+   if(outcome === "perfect"){
+  miniStatus.textContent = "HOLE-IN-ONE";
+  miniMsgText.textContent = "Yup… hole-in-one";
+  fairway.classList.add("perfect");
+  burstConfetti();
 
+  // ⏳ let hearts breathe before modal
+  setTimeout(() => {
+      showWin({
+    title: "NAILED IT ⛳️💓",
+    message: "Looks like you’re officially my mini-golf date 😌\nFood after is non-negotiable. I don’t make the rules."
+  });
+}, 850);
+}
     if(outcome === "lip"){
       miniStatus.textContent = "SO CLOSE 😭";
       miniMsgText.textContent = "It literally touched the edge… try again.";
     }
 
     if(outcome === "miss"){
-      miniStatus.textContent = "MISS 😅";
+      miniStatus.textContent = "MISSED";
       miniMsgText.textContent = "Okay that one was tragic… again.";
     }
 
     setTimeout(() => {
       fairway.classList.remove("shooting");
+      fairway.classList.remove("perfect");
       shootBtn.disabled = false;
       shootBtn.style.opacity = "1";
       miniStatus.textContent = "READY";
